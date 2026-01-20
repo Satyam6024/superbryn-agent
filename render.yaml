@@ -1,0 +1,41 @@
+# Render Blueprint for SuperBryn Voice Agent
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: superbryn-agent
+    env: python
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m src.main --mode both
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.0"
+      - key: ENVIRONMENT
+        value: production
+      - key: LIVEKIT_URL
+        sync: false
+      - key: LIVEKIT_API_KEY
+        sync: false
+      - key: LIVEKIT_API_SECRET
+        sync: false
+      - key: DEEPGRAM_API_KEY
+        sync: false
+      - key: CARTESIA_API_KEY
+        sync: false
+      - key: CARTESIA_VOICE_ID
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: BEYOND_PRESENCE_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+    healthCheckPath: /health
+    autoDeploy: true
