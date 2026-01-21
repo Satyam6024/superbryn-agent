@@ -78,3 +78,5 @@ Thumbs.db
 logs/
 tmp/
 temp/
+tests/
+

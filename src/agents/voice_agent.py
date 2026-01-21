@@ -22,7 +22,7 @@ from livekit.agents import (
 from livekit.plugins import deepgram, cartesia
 
 from ..services.supabase_service import SupabaseService
-from ..services.claude_service import ClaudeService, get_system_prompt
+from ..services.llm_service import LLMService, get_system_prompt
 from ..services.slot_generator import SlotGenerator
 from ..tools.appointment_tools import AppointmentTools, ToolResult, ConversationState
 from ..models.conversation import ToolCallLog, ConversationSummary, EventLog
@@ -36,14 +36,14 @@ class VoiceAgent:
     - LiveKit for real-time audio/video
     - Deepgram for speech-to-text
     - Cartesia for text-to-speech
-    - Claude for conversation intelligence
+    - Gemini/Groq for conversation intelligence
     - Appointment tools for booking management
     """
 
     def __init__(
         self,
         supabase_service: SupabaseService,
-        claude_service: ClaudeService,
+        llm_service: LLMService,
         slot_generator: SlotGenerator,
         cartesia_api_key: str,
         cartesia_voice_id: str,
@@ -58,7 +58,7 @@ class VoiceAgent:
 
         Args:
             supabase_service: Database service
-            claude_service: Claude LLM service
+            llm_service: LLM service (Gemini/Groq)
             slot_generator: Appointment slot generator
             cartesia_api_key: Cartesia API key
             cartesia_voice_id: Cartesia voice ID
@@ -69,7 +69,7 @@ class VoiceAgent:
             on_state_change: Callback for state changes
         """
         self.db = supabase_service
-        self.claude = claude_service
+        self.llm = llm_service
         self.slot_generator = slot_generator
         self.agent_name = agent_name
 
@@ -194,8 +194,8 @@ class VoiceAgent:
                 "cancelled": state.appointments_cancelled if state else [],
             }
 
-            # Generate summary via Claude
-            summary_data = await self.claude.generate_summary(
+            # Generate summary via LLM
+            summary_data = await self.llm.generate_summary(
                 self.conversation_history,
                 [log.to_display_dict(technical=True) for log in self.tool_call_logs],
                 appointments_affected,

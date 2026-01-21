@@ -30,11 +30,16 @@ class Settings(BaseSettings):
         description="Cartesia voice ID for TTS"
     )
 
-    # Claude Configuration (LLM)
-    anthropic_api_key: str = Field(..., description="Anthropic API key")
-    claude_model: str = Field(
-        default="claude-sonnet-4-20250514",
-        description="Claude model to use"
+    # LLM Configuration (Gemini primary, Groq fallback)
+    gemini_api_key: str = Field(..., description="Google Gemini API key")
+    gemini_model: str = Field(
+        default="gemini-2.5-flash",
+        description="Gemini model to use"
+    )
+    groq_api_key: str = Field(..., description="Groq API key")
+    groq_model: str = Field(
+        default="llama-3.3-70b-versatile",
+        description="Groq model to use"
     )
 
     # Beyond Presence Configuration (Avatar)

@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from config.settings import get_settings
 from src.services.supabase_service import SupabaseService
-from src.services.claude_service import ClaudeService
+from src.services.llm_service import LLMService
 from src.services.slot_generator import SlotGenerator
 from src.agents.voice_agent import VoiceAgent, BrynAgentSession
 from src.api.routes import create_app
@@ -47,9 +47,11 @@ class AgentWorker:
             key=self.settings.supabase_service_role_key,
         )
 
-        self.claude = ClaudeService(
-            api_key=self.settings.anthropic_api_key,
-            model=self.settings.claude_model,
+        self.llm = LLMService(
+            gemini_api_key=self.settings.gemini_api_key,
+            groq_api_key=self.settings.groq_api_key,
+            gemini_model=self.settings.gemini_model,
+            groq_model=self.settings.groq_model,
         )
 
         self.slot_generator = SlotGenerator(
@@ -66,7 +68,7 @@ class AgentWorker:
         """Create a new voice agent instance."""
         return VoiceAgent(
             supabase_service=self.supabase,
-            claude_service=self.claude,
+            llm_service=self.llm,
             slot_generator=self.slot_generator,
             cartesia_api_key=self.settings.cartesia_api_key,
             cartesia_voice_id=self.settings.cartesia_voice_id,
