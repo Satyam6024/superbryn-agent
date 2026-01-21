@@ -14,7 +14,7 @@ services:
       - key: ENVIRONMENT
         value: production
       - key: RUN_MODE
-        value: both
+        value: api
       - key: LIVEKIT_URL
         sync: false
       - key: LIVEKIT_API_KEY

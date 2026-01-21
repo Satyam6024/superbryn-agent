@@ -154,24 +154,16 @@ def run_api_server():
 def main():
     """Main entry point."""
     # Use environment variable for run mode (CLI args conflict with LiveKit CLI)
-    run_mode = os.environ.get("RUN_MODE", "both").lower()
+    run_mode = os.environ.get("RUN_MODE", "api").lower()
 
-    if run_mode == "api":
-        logger.info("Starting API server only")
-        run_api_server()
-    elif run_mode == "agent":
+    if run_mode == "agent":
         logger.info("Starting agent worker only")
         cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))
     else:
-        # Default: run both (API in background, agent as main)
-        logger.info("Starting both agent worker and API server")
-        # Run API server in background thread
-        import threading
-        api_thread = threading.Thread(target=run_api_server, daemon=True)
-        api_thread.start()
-
-        # Run agent worker (this blocks)
-        cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))
+        # Default: run API server only
+        # Note: For production, run agent separately or use LiveKit Cloud
+        logger.info("Starting API server")
+        run_api_server()
 
 
 if __name__ == "__main__":
