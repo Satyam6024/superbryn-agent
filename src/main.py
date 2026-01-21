@@ -153,31 +153,24 @@ def run_api_server():
 
 def main():
     """Main entry point."""
-    import argparse
+    # Use environment variable for run mode (CLI args conflict with LiveKit CLI)
+    run_mode = os.environ.get("RUN_MODE", "both").lower()
 
-    parser = argparse.ArgumentParser(description="SuperBryn Voice Agent")
-    parser.add_argument(
-        "--mode",
-        choices=["agent", "api", "both"],
-        default="agent",
-        help="Run mode: agent (LiveKit worker), api (HTTP server), or both",
-    )
-    args = parser.parse_args()
-
-    if args.mode == "api":
+    if run_mode == "api":
         logger.info("Starting API server only")
         run_api_server()
-    elif args.mode == "both":
+    elif run_mode == "agent":
+        logger.info("Starting agent worker only")
+        cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))
+    else:
+        # Default: run both (API in background, agent as main)
         logger.info("Starting both agent worker and API server")
         # Run API server in background thread
         import threading
         api_thread = threading.Thread(target=run_api_server, daemon=True)
         api_thread.start()
 
-        # Run agent worker
-        cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))
-    else:
-        logger.info("Starting agent worker only")
+        # Run agent worker (this blocks)
         cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))
 
 

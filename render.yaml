@@ -7,12 +7,14 @@ services:
     env: python
     runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python -m src.main --mode both
+    startCommand: python -m src.main
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.0"
       - key: ENVIRONMENT
         value: production
+      - key: RUN_MODE
+        value: both
       - key: LIVEKIT_URL
         sync: false
       - key: LIVEKIT_API_KEY
@@ -25,7 +27,13 @@ services:
         sync: false
       - key: CARTESIA_VOICE_ID
         sync: false
-      - key: ANTHROPIC_API_KEY
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
         sync: false
       - key: BEYOND_PRESENCE_API_KEY
         sync: false
