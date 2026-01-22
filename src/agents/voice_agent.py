@@ -265,13 +265,13 @@ class BrynAgentSession(Agent):
         system_prompt: str,
     ):
         """Initialize agent session."""
-        super().__init__()
+        super().__init__(instructions=system_prompt)
         self.voice_agent = voice_agent
         self.session_id = session_id
-        self.system_prompt = system_prompt
+        self._system_prompt = system_prompt
 
-        # Configure STT
-        self.stt = deepgram.STT(
+        # Configure STT (use different name to avoid Agent property conflict)
+        self._stt_instance = deepgram.STT(
             api_key=voice_agent.deepgram_api_key,
             model="nova-2",
             language="en-US",
@@ -279,8 +279,8 @@ class BrynAgentSession(Agent):
             punctuate=True,
         )
 
-        # Configure TTS
-        self.tts = cartesia.TTS(
+        # Configure TTS (use different name to avoid Agent property conflict)
+        self._tts_instance = cartesia.TTS(
             api_key=voice_agent.cartesia_api_key,
             voice=voice_agent.cartesia_voice_id,
         )
@@ -400,13 +400,12 @@ class BrynAgentSession(Agent):
         )
         return result.verbal_response
 
-    async def on_enter(self) -> None:
-        """Called when agent enters the room."""
+    async def on_enter(self) -> str:
+        """Called when agent enters the room. Return greeting message."""
         logger.info(f"Agent entered room for session {self.session_id}")
 
-        # Send initial greeting
-        greeting = self._get_greeting()
-        await self.say(greeting)
+        # Return initial greeting (will be spoken by the agent)
+        return self._get_greeting()
 
     def _get_greeting(self) -> str:
         """Get appropriate greeting based on context."""

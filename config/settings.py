@@ -74,6 +74,7 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = False
+        extra = "ignore"  # Ignore extra env vars like RUN_MODE, ANTHROPIC_API_KEY
 
 
 def get_settings() -> Settings:

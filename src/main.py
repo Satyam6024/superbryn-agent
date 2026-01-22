@@ -11,7 +11,9 @@ from typing import Optional
 
 from aiohttp import web
 from dotenv import load_dotenv
-from livekit.agents import WorkerOptions, cli
+from livekit.agents import WorkerOptions, cli, AgentSession
+from livekit.plugins import google as google_llm
+from livekit.plugins import silero
 
 # Add parent to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -93,39 +95,67 @@ async def entrypoint(ctx):
 
     logger.info(f"Agent entrypoint called for room: {ctx.room.name}")
 
+    # Connect to the room first
+    await ctx.connect()
+
     # Create voice agent
     voice_agent = worker.create_voice_agent()
 
-    # Get participant info
-    participant_identity = ctx.participant.identity if ctx.participant else "unknown"
-
-    # Determine if returning user (simplified - could enhance with DB lookup)
+    # Get first remote participant (the user)
+    participant_identity = "unknown"
+    user_timezone = "UTC"
     is_returning = False
     user_name = None
 
-    # Extract timezone from participant metadata if available
-    user_timezone = "UTC"
-    if ctx.participant and ctx.participant.metadata:
-        try:
-            import json
-            metadata = json.loads(ctx.participant.metadata)
-            user_timezone = metadata.get("timezone", "UTC")
-            is_returning = metadata.get("is_returning", False)
-            user_name = metadata.get("user_name")
-        except (json.JSONDecodeError, AttributeError):
-            pass
+    # Check remote participants for metadata
+    for p in ctx.room.remote_participants.values():
+        participant_identity = p.identity
+        if p.metadata:
+            try:
+                import json
+                metadata = json.loads(p.metadata)
+                user_timezone = metadata.get("timezone", "UTC")
+                is_returning = metadata.get("is_returning", False)
+                user_name = metadata.get("user_name")
+            except (json.JSONDecodeError, AttributeError):
+                pass
+        break
 
     # Create session
     session_id = f"{ctx.room.name}-{participant_identity}"
-    agent_session = voice_agent.create_agent_session(
+    bryn_agent = voice_agent.create_agent_session(
         session_id=session_id,
         user_timezone=user_timezone,
         is_returning_user=is_returning,
         user_name=user_name,
     )
 
-    # Start the agent
-    await agent_session.start(ctx)
+    # Create Gemini LLM for the session
+    gemini_llm = google_llm.LLM(
+        model=worker.settings.gemini_model,
+        api_key=worker.settings.gemini_api_key,
+    )
+
+    # Create AgentSession with VAD for proper turn detection
+    session = AgentSession(
+        stt=bryn_agent._stt_instance,
+        tts=bryn_agent._tts_instance,
+        llm=gemini_llm,
+        vad=silero.VAD.load(),
+    )
+
+    # Start session with agent and room as keyword arguments
+    await session.start(agent=bryn_agent, room=ctx.room)
+
+    logger.info("Session started, saying greeting...")
+
+    # Use say() for direct TTS output
+    try:
+        greeting = "Hello! I'm Bryn, your voice assistant. I can help you book, check, or manage appointments. How can I help you today?"
+        await session.say(greeting)
+        logger.info("Greeting spoken successfully")
+    except Exception as e:
+        logger.error(f"Failed to speak greeting: {e}")
 
 
 def run_api_server():
