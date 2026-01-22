@@ -112,20 +112,17 @@ async def generate_token(request: web.Request) -> web.Response:
     api_key = request.app["livekit_api_key"]
     api_secret = request.app["livekit_api_secret"]
 
-    # Create access token
-    token = AccessToken(api_key, api_secret)
-    token.identity = participant_name
-    token.name = participant_name
-
-    # Grant permissions
-    grant = VideoGrants(
-        room_join=True,
-        room=room_name,
-        can_publish=True,
-        can_subscribe=True,
-        can_publish_data=True,
-    )
-    token.video_grants = grant
+    # Create access token with identity
+    token = AccessToken(api_key, api_secret) \
+        .with_identity(participant_name) \
+        .with_name(participant_name) \
+        .with_grants(VideoGrants(
+            room_join=True,
+            room=room_name,
+            can_publish=True,
+            can_subscribe=True,
+            can_publish_data=True,
+        ))
 
     jwt = token.to_jwt()
 
