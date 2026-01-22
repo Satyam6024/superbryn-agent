@@ -2,6 +2,8 @@
 livekit-agents>=0.8.0
 livekit-plugins-deepgram>=0.6.0
 livekit-plugins-cartesia>=0.4.0
+livekit-plugins-google>=0.4.0
+livekit-plugins-silero>=0.6.0
 livekit-api>=0.6.0
 
 # LLM Providers (Gemini primary, Groq fallback)
