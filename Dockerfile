@@ -22,7 +22,7 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
 # Expose port for API server
-EXPOSE 8080
+EXPOSE 8082
 
-# Default command - run both agent and API
-CMD ["python", "-m", "src.main", "--mode", "both"]
+# Default: run API server (override with RUN_MODE=agent for worker)
+CMD ["python", "-m", "src.main"]

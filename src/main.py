@@ -32,8 +32,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Load environment variables
-load_dotenv()
+# Load environment variables (override=True ensures .env values take precedence)
+load_dotenv(override=True)
 
 
 class AgentWorker:
@@ -177,21 +177,38 @@ def run_api_server():
     )
 
     # Run server
-    port = int(os.environ.get("PORT", 8080))
-    web.run_app(app, host="0.0.0.0", port=port)
+    port = int(os.environ.get("PORT", 8082))
+    host = os.environ.get("HOST", "127.0.0.1")
+    web.run_app(app, host=host, port=port)
+
+
+def run_api_in_thread():
+    """Run the API server in a separate thread (for 'both' mode)."""
+    import threading
+
+    def _start_api():
+        run_api_server()
+
+    api_thread = threading.Thread(target=_start_api, daemon=True)
+    api_thread.start()
+    logger.info("API server thread started")
 
 
 def main():
     """Main entry point."""
     # Use environment variable for run mode (CLI args conflict with LiveKit CLI)
-    run_mode = os.environ.get("RUN_MODE", "api").lower()
+    run_mode = os.environ.get("RUN_MODE", "api").strip().lower()
 
     if run_mode == "agent":
         logger.info("Starting agent worker only")
         cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))
+    elif run_mode == "both":
+        logger.info("Starting both agent worker and API server")
+        # Start API server in a background thread, then run agent worker
+        run_api_in_thread()
+        cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))
     else:
         # Default: run API server only
-        # Note: For production, run agent separately or use LiveKit Cloud
         logger.info("Starting API server")
         run_api_server()
 

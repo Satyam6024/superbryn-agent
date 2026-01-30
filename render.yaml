@@ -2,8 +2,9 @@
 # https://render.com/docs/blueprint-spec
 
 services:
+  # 1. API Server - handles token generation, admin panel, health checks
   - type: web
-    name: superbryn-agent
+    name: superbryn-api
     env: python
     runtime: python
     buildCommand: pip install -r requirements.txt
@@ -46,4 +47,50 @@ services:
       - key: ADMIN_PASSWORD
         sync: false
     healthCheckPath: /health
+    autoDeploy: true
+
+  # 2. Agent Worker - connects to LiveKit, handles voice conversations
+  - type: worker
+    name: superbryn-agent
+    env: python
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m src.main start
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.0"
+      - key: ENVIRONMENT
+        value: production
+      - key: RUN_MODE
+        value: agent
+      - key: LIVEKIT_URL
+        sync: false
+      - key: LIVEKIT_API_KEY
+        sync: false
+      - key: LIVEKIT_API_SECRET
+        sync: false
+      - key: DEEPGRAM_API_KEY
+        sync: false
+      - key: CARTESIA_API_KEY
+        sync: false
+      - key: CARTESIA_VOICE_ID
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        sync: false
+      - key: BEYOND_PRESENCE_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
     autoDeploy: true
